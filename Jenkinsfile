@@ -2,11 +2,35 @@ pipeline {
     agent any
 
     stages {
-        stage('Hello') {
+        stage('Build') {
+            agent {
+                docker {
+                    image 'node:18-alpine'
+                    reusenode true
+                }
+            }
             steps {
-                sh 'echo "Hello from World"'
-                sh 'whoami'
+                sh '''
+                ls -la
+                node --version
+                npm ci
+                npm run build
+                ls -la
+                '''
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh '''
+                test -f build/index.html
+                npm test
+                '''
+            }
+        }
+        post {
+            always {
+                junit 'test-results/junit.xml'
             }
         }
     }
-}
